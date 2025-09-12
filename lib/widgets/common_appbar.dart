@@ -9,6 +9,7 @@ class CommonAppbar extends StatelessWidget implements PreferredSizeWidget{
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      automaticallyImplyLeading: false,
       backgroundColor: AppColors.whiteColor,
       actions: [
         IconButton(onPressed: (){}, icon: Icon(Icons.notifications_active))

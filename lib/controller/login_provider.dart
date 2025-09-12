@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:med_point/core/utils/app_urls.dart';
 import 'package:med_point/core/utils/snack_bar_helper.dart';
 import 'package:med_point/model/user_model.dart';
+import 'package:med_point/view/home_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginProvider extends ChangeNotifier {
@@ -52,7 +53,7 @@ class LoginProvider extends ChangeNotifier {
           backgroundColor: Colors.green,
         );
 
-        // Navigator.pushNamed(context, HomeView.routeName);
+        Navigator.pushNamed(context, HomeView.routeName);
       } else {
         SnackbarHelper.show(
           context,
