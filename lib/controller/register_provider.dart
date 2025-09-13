@@ -248,7 +248,7 @@ class RegisterProvider extends ChangeNotifier {
   void onButtonClear() {
     maleCount = 0;
     femaleCount = 0;
-
+    selectedTreatment.clear();
     notifyListeners();
   }
 
