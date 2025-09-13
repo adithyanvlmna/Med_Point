@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:med_point/core/app_theme/app_colors.dart';
 
 class CommonMultiSelectDropdown<T> extends StatefulWidget {
   final List<T> items;
@@ -46,6 +47,8 @@ class _CommonMultiSelectDropdownState<T> extends State<CommonMultiSelectDropdown
                   children: widget.items.map((item) {
                     bool isSelected = _selectedItems.contains(item);
                     return CheckboxListTile(
+                      activeColor: AppColors.buttonColor,
+                     
                       value: isSelected,
                       title: Text(widget.getLabel(item)),
                       onChanged: (bool? selected) {
@@ -67,7 +70,7 @@ class _CommonMultiSelectDropdownState<T> extends State<CommonMultiSelectDropdown
                     widget.onSelectionChanged(_selectedItems);
                     Navigator.pop(context);
                   },
-                  child: const Text("OK"),
+                  child: const Text("OK",style: TextStyle(color: AppColors.buttonColor),),
                 )
               ],
             );

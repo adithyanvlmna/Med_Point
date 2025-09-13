@@ -369,6 +369,7 @@ class RegisterProvider extends ChangeNotifier {
     int discount = 500,
     int advance = 1200,
   }) async {
+    clearAllValues();
     final pdf = pw.Document();
 
     final bgImage = pw.MemoryImage(

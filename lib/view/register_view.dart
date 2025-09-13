@@ -279,7 +279,7 @@ class _RegisterViewState extends State<RegisterView> {
                             provider.updatePatient(context);
                                                     final treatments = [
                           {
-                            'name': 'Massage',
+                            'name': value.selectedTreatment.text.trim(),
                             'price': 500,
                             'male': provider.maleCount,
                             'female': provider.femaleCount,
