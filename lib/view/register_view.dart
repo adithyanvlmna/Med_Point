@@ -1,0 +1,495 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'package:flutter/material.dart';
+import 'package:med_point/controller/register_provider.dart';
+import 'package:med_point/core/app_theme/app_colors.dart';
+import 'package:med_point/core/app_theme/app_textstyles.dart';
+import 'package:med_point/core/utils/app_size.dart';
+import 'package:med_point/core/utils/app_validators.dart';
+import 'package:med_point/core/utils/data_picker.dart';
+import 'package:med_point/core/utils/date_time_formatter.dart';
+import 'package:med_point/core/utils/internet_checker.dart';
+import 'package:med_point/model/treatment_model.dart';
+import 'package:med_point/widgets/common_appbar.dart';
+import 'package:med_point/widgets/common_button.dart';
+import 'package:med_point/widgets/common_dropdown.dart';
+import 'package:med_point/widgets/common_multi_select_dropdown.dart';
+import 'package:med_point/widgets/common_textfield.dart';
+import 'package:med_point/widgets/custom_treatment_card.dart';
+import 'package:provider/provider.dart';
+
+class RegisterView extends StatefulWidget {
+  static const String routeName = "registerView";
+  const RegisterView({super.key});
+
+  @override
+  State<RegisterView> createState() => _RegisterViewState();
+}
+
+class _RegisterViewState extends State<RegisterView> {
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      RegisterProvider provider = Provider.of<RegisterProvider>(
+        context,
+        listen: false,
+      );
+      await provider.getBranchList();
+      await provider.getTreatmentList();
+    });
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget commonSizedBox(double height) {
+      return SizedBox(height: height);
+    }
+
+    return ConnectivityWrapperWidget(
+      child: Consumer<RegisterProvider>(builder: (context, value, child) {
+        return WillPopScope(
+          onWillPop: () async {
+            value.clearAllValues();
+            return true;
+          },
+          child: Scaffold(
+              appBar: CommonAppbar(
+                automaticallyImplyLeading: true,
+              ),
+              body: Padding(
+                padding: const EdgeInsets.all(14.0),
+                child: Form(
+                  key: value.formKey,
+                  child: ListView(
+                    children: [
+                      Text("Register", style: AppTextStyles.primaryText),
+                      commonSizedBox(30),
+                      Text("Name", style: AppTextStyles.secondaryGreyText),
+                      commonSizedBox(10),
+                      CommonTextField(
+                        validator: (p0) => validateField("Name", p0),
+                        controller: value.nameController,
+                        hintText: "Enter your full name",
+                      ),
+                      commonSizedBox(20),
+                      Text(
+                        "Whatsapp Number",
+                        style: AppTextStyles.secondaryGreyText,
+                      ),
+                      commonSizedBox(10),
+                      CommonTextField(
+                        validator: (p0) => validateField("Phone", p0),
+                        keyboardType: TextInputType.phone,
+                        controller: value.wNumberController,
+                        hintText: "Enter your Whatsapp number",
+                      ),
+                      commonSizedBox(20),
+                      Text("Address", style: AppTextStyles.secondaryGreyText),
+                      commonSizedBox(10),
+                      CommonTextField(
+                        validator: (p0) => validateField("Address", p0),
+                        controller: value.addressController,
+                        hintText: "Enter your full address",
+                      ),
+                      commonSizedBox(20),
+                      Text("Location", style: AppTextStyles.secondaryGreyText),
+                      CommonDropdown(
+                        items: value.keralaLocations,
+                        value: value.selectedLocation,
+                        onChanged: (val) {
+                          value.setSelectedLocation(val);
+                        },
+                        hintText: "Choose your location",
+                        validator: (val) =>
+                            val == null ? "Please select a location" : null,
+                      ),
+                      commonSizedBox(20),
+                      Text("Branch", style: AppTextStyles.secondaryGreyText),
+                      commonSizedBox(10),
+                      CommonDropdown(
+                        items: value.branchList
+                            .map<String>(
+                              (branch) => branch['name'].toString(),
+                            )
+                            .toList(),
+                        value: value.selectedBranchName,
+                        onChanged: (val) {
+                          value.setSelectedBranch(val);
+                        },
+                        hintText: "Select the branch",
+                        validator: (val) =>
+                            val == null ? "Please select a branch" : null,
+                      ),
+                      commonSizedBox(20),
+                      Text("Treatments",
+                          style: AppTextStyles.secondaryGreyText),
+                      commonSizedBox(10),
+                      TreatmentCard(
+                        title: value.selectedTreatment.text,
+                        maleCount: value.maleCount,
+                        femaleCount: value.femaleCount,
+                        onEdit: () {
+                          showBottomSheet(context);
+                        },
+                        onDelete: () {
+                          value.onButtonClear();
+                        },
+                      ),
+                      commonSizedBox(10),
+                      CommonButton(
+                        onTap: () {
+                          showBottomSheet(context);
+                        },
+                        text: "+ Add Treatments",
+                        iscolor: true,
+                      ),
+                      commonSizedBox(20),
+                      Text(
+                        "Total Amount",
+                        style: AppTextStyles.secondaryGreyText,
+                      ),
+                      commonSizedBox(10),
+                      CommonTextField(
+                        validator: (p0) => validateField("Total Amount", p0),
+                        controller: value.totalController,
+                        hintText: "Enter total amount",
+                      ),
+                      commonSizedBox(20),
+                      Text(
+                        "Discount Amount",
+                        style: AppTextStyles.secondaryGreyText,
+                      ),
+                      commonSizedBox(10),
+                      CommonTextField(
+                        validator: (p0) => validateField("Discount Amount", p0),
+                        controller: value.discountController,
+                        hintText: "Enter discount amount",
+                      ),
+                      commonSizedBox(20),
+                      Text(
+                        "Payment option",
+                        style: AppTextStyles.secondaryGreyText,
+                      ),
+                      commonSizedBox(10),
+                      Row(
+                        spacing: 5,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          customRadio("Cash"),
+                          Text("Cash", style: AppTextStyles.secondaryGreyText),
+                          Spacer(),
+                          customRadio("Card"),
+                          Text("Card", style: AppTextStyles.secondaryGreyText),
+                          Spacer(),
+                          customRadio("UPI"),
+                          Text("UPI", style: AppTextStyles.secondaryGreyText),
+                        ],
+                      ),
+                      if (value.paymentType.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 5),
+                          child: Text(
+                            "Please select a payment option",
+                            style: TextStyle(color: Colors.red, fontSize: 12),
+                          ),
+                        ),
+                      commonSizedBox(20),
+                      Text(
+                        "Advance Amount",
+                        style: AppTextStyles.secondaryGreyText,
+                      ),
+                      commonSizedBox(10),
+                      CommonTextField(
+                        validator: (p0) => validateField("Advance Amount", p0),
+                        controller: value.advAmountController,
+                        hintText: "Enter advance amount",
+                      ),
+                      commonSizedBox(20),
+                      Text(
+                        "Balance Amount",
+                        style: AppTextStyles.secondaryGreyText,
+                      ),
+                      commonSizedBox(10),
+                      CommonTextField(
+                        validator: (p0) => validateField("Balance Amount", p0),
+                        controller: value.bAmountController,
+                        hintText: "Enter balance amount",
+                      ),
+                      commonSizedBox(20),
+                      Text(
+                        "Treatment Date",
+                        style: AppTextStyles.secondaryGreyText,
+                      ),
+                      commonSizedBox(10),
+                      CommonTextField(
+                        validator: (p0) => validateField("Treatment Date", p0),
+                        controller: value.tDateController,
+                        hintText: "",
+                        suffixIcon: Icons.calendar_month_rounded,
+                        isSufix: true,
+                        onSuffixTap: () async {
+                          final pick = await selectDate(context);
+                          if (pick != null) {
+                            value.tDateController.text = formatDate(pick);
+                          }
+                        },
+                      ),
+                      commonSizedBox(20),
+                      Text(
+                        "Treatment Time",
+                        style: AppTextStyles.secondaryGreyText,
+                      ),
+                      commonSizedBox(10),
+                      Row(
+                        spacing: 10,
+                        children: [
+                          Expanded(
+                            child: CommonDropdown(
+                              items: value.hours12,
+                              value: value.selectedHour,
+                              onChanged: (val) => value.setSelectedHour(val),
+                              hintText: "Hour",
+                              validator: (val) =>
+                                  val == null ? "Select hour" : null,
+                            ),
+                          ),
+                          Expanded(
+                            child: CommonDropdown(
+                              items: value.minutesList,
+                              value: value.selectedMinute,
+                              onChanged: (val) => value.setSelectedMinute(val),
+                              hintText: "Minutes",
+                              validator: (val) =>
+                                  val == null ? "Select minute" : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                      commonSizedBox(10),
+                      CommonButton(
+                        isLoad: value.isLoading,
+                        onTap: () async {
+                         
+                          if (value.formKey.currentState!.validate()) {
+                            final provider = Provider.of<RegisterProvider>(
+                              context,
+                              listen: false,
+                            );
+                            provider.updatePatient(context);
+                                                    final treatments = [
+                          {
+                            'name': 'Massage',
+                            'price': 500,
+                            'male': provider.maleCount,
+                            'female': provider.femaleCount,
+                          },
+                        ];
+
+                        try {
+                          await provider.generateReceiptPdf(
+                            name:
+                                provider.nameController.text.isNotEmpty
+                                    ? provider.nameController.text
+                                    : 'John Doe',
+                            address:
+                                provider.addressController.text.isNotEmpty
+                                    ? provider.addressController.text
+                                    : 'Unknown Address',
+                            whatsapp:
+                                provider.wNumberController.text.isNotEmpty
+                                    ? provider.wNumberController.text
+                                    : '0000000000',
+                            bookedOn: DateTime.now(),
+                            treatmentDate:
+                                provider.tDateController.text.isNotEmpty
+                                    ? provider.tDateController.text
+                                    : formatDate(DateTime.now()),
+                            treatmentTime:
+                                "${provider.selectedHour ?? '--'}:${provider.selectedMinute ?? '--'}",
+                            treatments: treatments,
+                            discount:
+                                int.tryParse(
+                                  provider.discountController.text,
+                                ) ??
+                                0,
+                            advance:
+                                int.tryParse(
+                                  provider.advAmountController.text,
+                                ) ??
+                                0,
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Failed to generate PDF: $e'),
+                            ),
+                          );
+                        }
+                          }
+                        },
+                        text: "Save",
+                      ),
+                    ],
+                  ),
+                ),
+              )),
+        );
+      }),
+    );
+  }
+
+  Widget customRadio(String value) {
+    RegisterProvider provider = Provider.of<RegisterProvider>(
+      context,
+      listen: false,
+    );
+    final isColor = value == provider.paymentType;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          provider.paymentType = value;
+        });
+      },
+      child: Container(
+        height: 30,
+        width: 30,
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.greyColor),
+          color: isColor ? AppColors.buttonColor : AppColors.whiteColor,
+          borderRadius: BorderRadius.circular(100),
+        ),
+      ),
+    );
+  }
+
+  void showBottomSheet(BuildContext context) {
+    final provider = Provider.of<RegisterProvider>(context, listen: false);
+
+    showModalBottomSheet(
+      backgroundColor: AppColors.whiteColor,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      context: context,
+      builder: (context) {
+        return Consumer<RegisterProvider>(
+          builder: (context, value, child) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SizedBox(
+                width: screenWidth(context, 1),
+                height: screenHeight(context, 2.3),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 20),
+                      Text(
+                        "Choose Treatment",
+                        style: AppTextStyles.secondaryGreyText,
+                      ),
+                      const SizedBox(height: 10),
+                      CommonMultiSelectDropdown<TreatmentModel>(
+                        items: provider.treatmentList,
+                        selectedItems: provider.selectedTreatments,
+                        getLabel: (item) => item.name,
+                        getId: (item) => item.id,
+                        hintText: "Select Treatments",
+                        onSelectionChanged: (selected) {
+                          value.selectedTreatmentId.text =
+                              selected.map((e) => e.id.toString()).join(",");
+                          value.selectedTreatment.text =
+                              selected.map((e) => e.name.toString()).join(",");
+                          print(value.selectedTreatment.text);
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        "Add Patients",
+                        style: AppTextStyles.secondaryGreyText,
+                      ),
+                      const SizedBox(height: 10),
+                      _buildPatientCounterRow(
+                        context,
+                        label: "Male",
+                        count: value.maleCount,
+                        onIncrement: value.incrementMale,
+                        onDecrement: value.decrementMale,
+                      ),
+                      const SizedBox(height: 10),
+                      _buildPatientCounterRow(
+                        context,
+                        label: "Female",
+                        count: value.femaleCount,
+                        onIncrement: value.incrementFemale,
+                        onDecrement: value.decrementFemale,
+                      ),
+                      const Spacer(),
+                      CommonButton(
+                        text: "Save",
+                        onTap: () {
+                          value.saveTreatment(
+                              value.maleCount,
+                              value.femaleCount,
+                              value.selectedTreatment.text.trim());
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildPatientCounterRow(
+    BuildContext context, {
+    required String label,
+    required int count,
+    required VoidCallback onIncrement,
+    required VoidCallback onDecrement,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Container(
+            height: 45,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: const Color(0xFFF3F3F3),
+            ),
+            child: Text(label),
+          ),
+        ),
+        const SizedBox(width: 12),
+        CommonButton(onTap: onDecrement, iconData: Icons.remove, isRound: true),
+        const SizedBox(width: 10),
+        Container(
+          height: 45,
+          width: 50,
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: const Color(0xFFF3F3F3),
+          ),
+          child: Center(child: Text("$count")),
+        ),
+        const SizedBox(width: 10),
+        CommonButton(onTap: onIncrement, iconData: Icons.add, isRound: true),
+      ],
+    );
+  }
+}

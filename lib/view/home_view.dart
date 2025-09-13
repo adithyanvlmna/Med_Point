@@ -6,6 +6,7 @@ import 'package:med_point/core/utils/app_size.dart';
 import 'package:med_point/core/utils/date_time_formatter.dart';
 import 'package:med_point/core/utils/enum.dart';
 import 'package:med_point/core/utils/internet_checker.dart';
+import 'package:med_point/view/register_view.dart';
 import 'package:med_point/widgets/common_appbar.dart';
 import 'package:med_point/widgets/common_button.dart';
 import 'package:med_point/widgets/common_card.dart';
@@ -136,7 +137,7 @@ class _HomeViewState extends State<HomeView> {
                     ),
             floatingActionButton: CommonButton(
               onTap: () {
-                // Navigator.pushNamed(context, RegisterView.routeName);
+                Navigator.pushNamed(context, RegisterView.routeName);
               },
               text: "Register Now",
             ),
