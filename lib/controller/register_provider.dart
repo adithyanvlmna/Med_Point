@@ -266,7 +266,7 @@ class RegisterProvider extends ChangeNotifier {
     date = "";
     _selectedHour = "";
     _selectedMinute = "";
-    paymentType = "";
+    paymentType = "Cash";
     _selectedLocation = null;
     selectedBranchName = null;
     isLoading = false;
@@ -281,7 +281,7 @@ class RegisterProvider extends ChangeNotifier {
       if (selectedTreatmentId.text.isEmpty) {
         SnackbarHelper.show(
           context,
-          "Please Slecete Treatements",
+          "Please Select Treatments",
           backgroundColor: Colors.green,
         );
         return;
@@ -299,44 +299,55 @@ class RegisterProvider extends ChangeNotifier {
       final url = ApiUrls.baseUrl + ApiUrls.patientUpdate;
       print("Fetching from: $url");
 
+      
+      Map<String, String> formData = {
+        "name": nameController.text.trim(),
+        "exceutive": "ok",
+        "payment": paymentType,
+        "phone": wNumberController.text.trim(),
+        "address": addressController.text.trim(),
+        "total_amount":
+            (double.tryParse(totalController.text.trim()) ?? 0.0).toString(),
+        "discount_amount":
+            (double.tryParse(discountController.text.trim()) ?? 0.0).toString(),
+        "advance_amount":
+            (double.tryParse(advAmountController.text.trim()) ?? 0.0)
+                .toString(),
+        "balance_amount":
+            (double.tryParse(bAmountController.text.trim()) ?? 0.0).toString(),
+        "date_nd_time": formatSelectedDateTimeFromSingle(
+          dateStr: tDateController.text,
+          hourPeriod: selectedHour!,
+          minuteStr: selectedMinute!,
+        ),
+        "id": "",
+        "male": selectedTreatmentId.text
+            .split(",")
+            .map((e) => int.parse(e))
+            .toList()
+            .toString(), 
+        "female": selectedTreatmentId.text
+            .split(",")
+            .map((e) => int.parse(e))
+            .toList()
+            .toString(),
+        "branch": selectedBranchName!,
+        "treatments": selectedTreatmentId.text
+            .split(",")
+            .map((e) => int.parse(e))
+            .toList()
+            .toString(),
+      };
+
+      print("Form Data: $formData");
+
       final response = await http.post(
         Uri.parse(url),
         headers: {
           'Authorization': 'Bearer $token',
+         
         },
-        body: {
-          "name": nameController.text.trim(),
-          "exceutive": "ok",
-          "payment": paymentType,
-          "phone": wNumberController.text.trim(),
-          "address": addressController.text.trim(),
-          "total_amount": double.tryParse(totalController.text.trim()) ?? 0.0,
-          "discount_amount":
-              double.tryParse(discountController.text.trim()) ?? 0.0,
-          "advance_amount":
-              double.tryParse(advAmountController.text.trim()) ?? 0.0,
-          "balance_amount":
-              double.tryParse(bAmountController.text.trim()) ?? 0.0,
-          "date_nd_time": formatSelectedDateTimeFromSingle(
-            dateStr: tDateController.text,
-            hourPeriod: selectedHour!,
-            minuteStr: selectedMinute!,
-          ),
-          "id": "0",
-          "male": selectedTreatmentId.text
-              .split(",")
-              .map((e) => int.parse(e))
-              .toList(),
-          "female": selectedTreatmentId.text
-              .split(",")
-              .map((e) => int.parse(e))
-              .toList(),
-          "branch": selectedBranchName,
-          "treatments": selectedTreatmentId.text
-              .split(",")
-              .map((e) => int.parse(e))
-              .toList(),
-        },
+        body: formData,
       );
 
       print("Response Status: ${response.statusCode}");
@@ -355,7 +366,6 @@ class RegisterProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
-    notifyListeners();
   }
 
   Future<void> generateReceiptPdf({
